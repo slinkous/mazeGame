@@ -7,7 +7,7 @@ Game.layers = [];
 Game.layers[1] = {};
 Game.maze = {};
 GRID_SIZE = 21;
-TILE_SIZE = 500/21;
+TILE_SIZE = 40;
 
 // Resources \\
 
@@ -45,19 +45,28 @@ Game.layers[1].start = function(game){
   layer.addChild(skater);
   setWalls(Game.maze, layer);
   var destination = findGridLocation(21, 20);
-  // skater.moveTo(destination.x, destination.y)
-  skater.findPath(destination.x, destination.y)
+
+  var path = skater.findPath(destination.x, destination.y);
+  // skater.traversePath(path)
+  skater.moveTo(path[20])
   //
   // var label = cc.LabelTTF.create("Maze Game", "Courier", 40);
   // label.setPosition(size.width/2, size.height/2);
   // label.setColor(cc.color.BLACK)
   // game.addChild(label, 1)
+  for (var space of path){
+    var label = cc.LabelTTF.create("X", "Courier", 36);
+    label.setPosition(space.x, space.y);
+    label.setColor(cc.color.RED)
+    game.addChild(label, 1)
+  }
 }
 
 var player = cc.Sprite.extend({
   ctor: function(){
     this._super();
     this.initWithFile(Game.res.skater_png);
+    this.scale = TILE_SIZE / 16
     this.anchorX = 0;
     this.anchorY = 1;
     var loc = findGridLocation(0,1)
@@ -67,9 +76,10 @@ var player = cc.Sprite.extend({
     this.ySpeed = 0;
     this.speed = 1;
   },
-  moveTo: function(x, y){
-    this.moveX = x - this.x;
-    this.moveY = y - this.y;
+  moveTo: function(loc){
+
+    this.moveX = loc.x - this.x;
+    this.moveY = loc.y - this.y;
     this.runAction(new cc.MoveBy(1, cc.p(this.moveX, this.moveY)));
   },
   move: function(){
@@ -114,7 +124,6 @@ var player = cc.Sprite.extend({
       }
 
       closed.push(current);
-      console.log(closed.length);
 
       if(current.x == goalX && current.y == goalY){
         console.log("reached goal")
@@ -134,12 +143,11 @@ var player = cc.Sprite.extend({
       if(current.y < size.height){
         neighbors.push({x: current.x, y: current.y + tileSize})
       }
-
       for(var n of neighbors){
         if(closed.find((c)=> c.x == n.x && c.y == n.y)){
           continue;
         }
-        if(Game.maze.tiles.find((t)=> t.x == n.x && t.y == n.y)){
+        if(Game.maze.tiles.find((t)=> t.col*TILE_SIZE == n.x && t.row*TILE_SIZE == n.y)){
           continue;
         }
         if(open.find((o) => o.x == n.x && o.y == n.y)){
@@ -155,6 +163,12 @@ var player = cc.Sprite.extend({
     console.log("no solution found")
     return;
 
+  },
+  traversePath: function(path){
+    for(var space of path){
+      this.moveTo(space)
+      console.log(space)
+    }
   }
 })
 
