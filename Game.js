@@ -74,8 +74,14 @@ Game.layers[2].extend = cc.Layer.extend({
         this.anchorY = 0;
       }
     });
-
     layer.addChild(new splash());
+    var title1 = cc.LabelTTF.create("Snail Escape!", "Arial", 90);
+    title1.setPosition(size.width/2, 3*size.height/4);
+    title1.setColor(new cc.Color(0, 0, 255, 0))
+    layer.addChild(title1, 1)
+    var title = cc.LabelTTF.create("Snail Escape!", "Arial", 90);
+    title.setPosition(size.width/2 + 0.001*size.width, 3*size.height/4 - 0.001*size.height);
+    layer.addChild(title, 1)
   }
 })
 
@@ -87,22 +93,10 @@ var splash = cc.Sprite.extend({
     this.y = 0;
     this.anchorX = 0;
     this.anchorY = 0;
-    cc.eventManager.addListener(listener.clone(), this)
   }
 });
 
-var listener = cc.EventListener.create({
-  event: cc.EventListener.TOUCH_ONE_BY_ONE, swallowTouches: true,
-  onTouchBegan: function(touch, event){
-    splash = event.getCurrentTarget();
-    var location = splash.convertToNodeSpace(touch.getLocation());
-    var targetSize = splash.getContentSize();
-    var targetRectangle = cc.rect(0, 0, targetSize.width, targetSize.height);
-    if(cc.rectContainsPoint(targetRectangle, location)){
-      cc.director.runScene(new Games.scene[1].extend())
-    }
-  }
-})
+
 
 
 // Scenes \\
@@ -126,6 +120,12 @@ Game.scenes[2].extend = cc.Scene.extend({
     var layer = new Game.layers[2].extend();
     layer.init();
     this.addChild(layer);
+    cc.eventManager.addListener({
+			event: cc.EventListener.MOUSE,
+	    onMouseDown: function(){
+        cc.director.runScene(new Game.scenes[1].extend())
+      }
+		}, this);
   },
 })
 
@@ -146,7 +146,7 @@ window.onload = function(){
 
   };
   cc.game.run("gameCanvas");
-  fetch('assets/maze.txt')
+  fetch('assets/mazes/maze2.txt')
   .then(response => response.text())
   .then((data) => {
     Game.maze = new Maze(data)

@@ -2,13 +2,20 @@
 <html>
 <head>
     <title>Maze Game</title>
-</head>
-<body>
+    <!-- <link href="https://fonts.googleapis.com/css?family=Lobster&display=swap" rel="stylesheet"> -->
     <style media="screen">
       body{
-        background-image: linear-gradient(lightblue, white, lightblue);
+        background-image: linear-gradient(lightblue, white);
+      }
+      font-face {
+        font-family: 'Lobster', cursive;
+        src: url(assets/Lobster/Lobster-Regular.ttf);
+        font-weight: 800;
       }
     </style>
+</head>
+<body>
+
     <canvas id="gameCanvas" width="840" height="840"></canvas>
     <script type="text/javascript" src="cocos2d-js-v3.13-lite.js" charset="UTF-8"></script>
     <script src="Game.js" charset="utf-8"></script>
