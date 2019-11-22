@@ -9,7 +9,7 @@ class Maze {
     var mazeArr = textData.split("\n")
     mazeArr = mazeArr.filter((l) => {return l.length > 0 && l.search(/\S/) != -1})
     var colCount = ((mazeArr[0].length - 1)/3)*2 + 1
-    var rowCount = mazeArr.length + 1
+    var rowCount = mazeArr.length
     var col;
     var tiles =[];
     for(var i = 0; i < mazeArr.length; i++){
@@ -28,6 +28,8 @@ class Maze {
     this.rows = rowCount;
     this.cols = colCount;
     this.tiles = tiles;
+    this.start = this.findGridLocation(0,1);
+    this.end = this.findGridLocation(colCount-1, rowCount-2)
   }
   setWalls(layer){
     var size = cc.director.getWinSize();
@@ -46,6 +48,8 @@ class Maze {
   }
   findGridLocation(col, row){
     var size = cc.director.getWinSize();
-    return({x: col*TILE_SIZE, y:size.height-row*TILE_SIZE})
+    var x = col*TILE_SIZE;
+    var y = size.height-row*TILE_SIZE
+    return({x:x, y:y})
   }
 }

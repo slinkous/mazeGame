@@ -5,15 +5,17 @@ var Snail = cc.Sprite.extend({
     this.scale = 1;
     this.anchorX = 0;
     this.anchorY = 1;
-    var loc = Game.maze.findGridLocation(0,1)
+    var loc = Game.maze.start;
     this.setPosition(loc.x, loc.y)
-    this.speed = 4;
+    this.speed = 1.25;
     this.frame = 0;
     this.numFrames = 4;
     this.animationSpeed = 10;
     this.animationNumber = 3;
     this.width = 40;
     this.height = 40;
+    this.progress = 0;
+    this.path = []
   },
   moveTo: function(loc){
 
@@ -36,7 +38,6 @@ var Snail = cc.Sprite.extend({
     var tries = 0;
     var size = cc.director.getWinSize();
 
-
     var distanceSquared = (goalX - this.x)**2 + (goalY - this.y)**2
     open.push({x:this.x, y: this.y, dist: distanceSquared})
 
@@ -57,6 +58,7 @@ var Snail = cc.Sprite.extend({
           step = step.parent;
         }
         this.setPath(path.reverse());
+        return;
       }
       //get all the available neighboring tiles
       neighbors = [];
@@ -94,17 +96,16 @@ var Snail = cc.Sprite.extend({
 
   },
   setPath: function(path){
-    
     this.path = path;
     this.progress = 0;
-    console.log(path)
+    // console.log(path)
   },
   traversePath: function(){
     if(!this.path){
       console.log("Couldn't solve the maze!")
       return;
     }
-    if(this.progress >= this.path.length-2){
+    if(this.progress >= this.path.length){
       // console.log("At the end of the road")
       this.path = [];
       return;

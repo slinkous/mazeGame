@@ -3,8 +3,10 @@
 Game = {};
 Game.scenes = [];
 Game.scenes[1] = {};
+Game.scenes[2] = {};
 Game.layers = [];
 Game.layers[1] = {};
+Game.layers[2] = {};
 Game.maze = {};
 Game.frameCount = 0;
 GRID_SIZE = 21;
@@ -15,7 +17,6 @@ TILE_SIZE = 40;
 Game.res = {
   snail_png: "assets/snail2.png",
   shrubwall_png: "assets/shrubwall.png",
-  maze_txt: "assets/maze.txt",
   snailsplash_png: "assets/snailsplash.png",
   leaf_png: "assets/leaf.png"
 };
@@ -36,14 +37,13 @@ Game.layers[1].extend = cc.Layer.extend({
     this.start(game)
   },
   start: function(game){
-    console.log("Layer 1 start")
     var size = cc.director.getWinSize();
     layer = cc.LayerColor.create(new cc.Color(47, 36, 30, 255), size.width, size.height);
     game.addChild(layer);
     Game.maze.setWalls(layer);
     Game.snail = new Snail();
     layer.addChild(Game.snail);
-    var destination = Game.maze.findGridLocation(19, 19);
+    var destination = Game.maze.end;
     var leaf = new cc.Sprite(Game.res.leaf_png);
     leaf.x = destination.x;
     leaf.y = destination.y;
@@ -51,6 +51,56 @@ Game.layers[1].extend = cc.Layer.extend({
     leaf.anchorY = 1;
     layer.addChild(leaf)
     Game.snail.findPath(destination.x, destination.y)
+  }
+})
+
+Game.layers[2].extend = cc.Layer.extend({
+  init: function(){
+    this._super();
+    var game = this;
+    this.start(game)
+  },
+  start: function(game){
+    var size = cc.director.getWinSize();
+    layer = cc.LayerColor.create(new cc.Color(47, 36, 30, 255), size.width, size.height);
+    game.addChild(layer);
+    var splash = cc.Sprite.extend({
+      ctor:function(){
+        this._super();
+        this.initWithFile(Game.res.snailsplash_png);
+        this.x = 0;
+        this.y = 0;
+        this.anchorX = 0;
+        this.anchorY = 0;
+      }
+    });
+
+    layer.addChild(new splash());
+  }
+})
+
+var splash = cc.Sprite.extend({
+  ctor:function(){
+    this._super();
+    this.initWithFile(Game.res.snailsplash_png);
+    this.x = 0;
+    this.y = 0;
+    this.anchorX = 0;
+    this.anchorY = 0;
+    cc.eventManager.addListener(listener.clone(), this)
+  }
+});
+
+var listener = cc.EventListener.create({
+  event: cc.EventListener.TOUCH_ONE_BY_ONE, swallowTouches: true,
+  onTouchBegan: function(touch, event){
+    splash = event.getCurrentTarget();
+    var location = splash.convertToNodeSpace(touch.getLocation());
+    var targetSize = splash.getContentSize();
+    var targetRectangle = cc.rect(0, 0, targetSize.width, targetSize.height);
+    if(cc.rectContainsPoint(targetRectangle, location)){
+      cc.director.runScene(new Games.scene[1].extend())
+    }
   }
 })
 
@@ -70,12 +120,20 @@ Game.scenes[1].extend = cc.Scene.extend({
     Game.snail.traversePath();
   }
 })
+Game.scenes[2].extend = cc.Scene.extend({
+  onEnter: function(){
+    this._super();
+    var layer = new Game.layers[2].extend();
+    layer.init();
+    this.addChild(layer);
+  },
+})
 
 // Run Game \\
 
 window.onload = function(){
-  var targetWidth = 840;
-  var targetHeight = 840;
+  var targetWidth = GRID_SIZE*TILE_SIZE;
+  var targetHeight = GRID_SIZE*TILE_SIZE;
 
   cc.game.onStart = function(){
     cc.view.adjustViewPort(false);
@@ -83,7 +141,7 @@ window.onload = function(){
     cc.view.resizeWithBrowserSize(true);
 
     cc.LoaderScene.preload(Game.g_resources, function () {
-      cc.director.runScene(new Game.scenes[1].extend());
+      cc.director.runScene(new Game.scenes[2].extend());
     }, this);
 
   };
