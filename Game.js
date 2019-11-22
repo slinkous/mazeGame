@@ -6,14 +6,17 @@ Game.scenes[1] = {};
 Game.layers = [];
 Game.layers[1] = {};
 Game.maze = {};
+Game.frameCount = 0;
 GRID_SIZE = 21;
 TILE_SIZE = 40;
 
 // Resources \\
 
 Game.res = {
-  skater_png : "stick_skater1.png",
+  skater_png: "stick_skater1.png",
+  snail_png: "snail2.png",
   wall_png: "wall.png",
+  shrubwall_png: "shrubwall.png",
   maze_txt: "maze.txt"
 };
 
@@ -36,75 +39,50 @@ Game.layers[1].extend = cc.Layer.extend({
 })
 Game.layers[1].start = function(game){
   var size = cc.director.getWinSize();
-  // layer = cc.LayerColor.create(new cc.Color(255, 0, 128, 255), size.width, size.height);
-  layer = cc.LayerColor.create(cc.color.WHITE, size.width, size.height);
+  layer = cc.LayerColor.create(new cc.Color(47, 36, 30, 255), size.width, size.height);
+  // layer = cc.LayerColor.create(cc.color.WHITE, size.width, size.height);
   game.addChild(layer);
-  var skater = new player();
-
-  console.log(skater)
-  layer.addChild(skater);
   setWalls(Game.maze, layer);
-  var destination = findGridLocation(21, 20);
+  Game.snail = new player();
+  layer.addChild(Game.snail);
 
-  var path = skater.findPath(destination.x, destination.y);
-  // skater.traversePath(path)
-  skater.moveTo(path[20])
-  //
-  // var label = cc.LabelTTF.create("Maze Game", "Courier", 40);
-  // label.setPosition(size.width/2, size.height/2);
-  // label.setColor(cc.color.BLACK)
-  // game.addChild(label, 1)
-  for (var space of path){
-    var label = cc.LabelTTF.create("X", "Courier", 36);
-    label.setPosition(space.x, space.y);
-    label.setColor(cc.color.RED)
-    game.addChild(label, 1)
-  }
+  var destination = findGridLocation(21, 20);
+  Game.snail.findPath(destination.x, destination.y)
+
 }
 
 var player = cc.Sprite.extend({
   ctor: function(){
     this._super();
-    this.initWithFile(Game.res.skater_png);
-    this.scale = TILE_SIZE / 16
+    this.initWithFile(Game.res.snail_png);
+    this.scale = 1;
     this.anchorX = 0;
     this.anchorY = 1;
     var loc = findGridLocation(0,1)
     this.setPosition(loc.x, loc.y)
-    this.direction = "right";
-    this.xSpeed = 0;
-    this.ySpeed = 0;
     this.speed = 1;
+    this.frame = 0;
+    this.numFrames = 4;
+    this.animationSpeed = 10;
+    this.animationNumber = 3;
+    this.width = 40;
+    this.height = 40;
   },
   moveTo: function(loc){
 
-    this.moveX = loc.x - this.x;
-    this.moveY = loc.y - this.y;
-    this.runAction(new cc.MoveBy(1, cc.p(this.moveX, this.moveY)));
+    var dx = Math.sign(loc.x - this.x)
+    var dy = Math.sign(loc.y - this.y)
+
+    if (dx > 0) { this.animNum = 0; }
+    if (dx < 0) { this.animNum = 1; }
+    if (dy > 0) { this.animNum = 2; }
+    if (dy < 0) { this.animNum = 3; }
+
+    this.x += dx*this.speed;
+    this.y += dy*this.speed;
+
   },
-  move: function(){
-    switch (this.direction) {
-      case "right":
-        this.xSpeed = 1;
-        this.ySpeed = 0;
-        break;
-      case "left":
-        this.xSpeed = -1;
-        this.ySpeed = 0;
-        break;
-      case "up":
-        this.xSpeed = 0;
-        this.ySpeed = 1;
-        break;
-      case "down":
-        this.xSpeed = 0;
-        this.ySpeed = -1;
-        break;
-      default:
-        this.xSpeed = 0;
-        this.ySpeed = 0;
-    }
-  },
+
   findPath: function(goalX, goalY){
     var open = [];
     var closed = [];
@@ -127,7 +105,13 @@ var player = cc.Sprite.extend({
 
       if(current.x == goalX && current.y == goalY){
         console.log("reached goal")
-        return closed;
+        var path = [];
+        var step = closed.pop();
+        while(step.parent){
+          path.push(step);
+          step = step.parent;
+        }
+        this.setPath(path.reverse());
       }
       //get all the available neighboring tiles
       neighbors = [];
@@ -147,7 +131,7 @@ var player = cc.Sprite.extend({
         if(closed.find((c)=> c.x == n.x && c.y == n.y)){
           continue;
         }
-        if(Game.maze.tiles.find((t)=> t.col*TILE_SIZE == n.x && t.row*TILE_SIZE == n.y)){
+        if(Game.maze.tiles.find((t)=> t.col*TILE_SIZE == n.x && (GRID_SIZE - t.row)*TILE_SIZE == n.y)){
           continue;
         }
         if(open.find((o) => o.x == n.x && o.y == n.y)){
@@ -156,7 +140,7 @@ var player = cc.Sprite.extend({
 
         var currentDistance = (current.x - n.x)**2 + (current.y - n.y)**2;
         var goalDistance = (goalX - n.x)**2 + (goalY - n.y)**2;
-        open.push({x: n.x, y: n.y, dist: currentDistance+goalDistance})
+        open.push({x: n.x, y: n.y, dist: currentDistance+goalDistance, parent: current})
       }
 
     }
@@ -164,11 +148,26 @@ var player = cc.Sprite.extend({
     return;
 
   },
-  traversePath: function(path){
-    for(var space of path){
-      this.moveTo(space)
-      console.log(space)
+  setPath: function(path){
+    this.path = path;
+    this.progress = 0;
+  },
+  traversePath: function(){
+    if(this.progress >= this.path.length){
+      this.path = [];
+      return;
     }
+    this.moveTo(this.path[this.progress])
+    if(this.x % TILE_SIZE == 0 && this.y % TILE_SIZE == 0){
+      this.progress++
+    }
+    console.log(Game.frameCount)
+    if(Game.frameCount % this.animationSpeed == 0){
+      this.frame++
+      this.frame %= this.numFrames;
+      console.log(this.frame)
+    }
+    this.setTextureRect(cc.rect(this.frame*this.width,this.height*this.animNum, this.width, this.height));
   }
 })
 
@@ -180,6 +179,11 @@ Game.scenes[1].extend = cc.Scene.extend({
     var layer = new Game.layers[1].extend();
     layer.init();
     this.addChild(layer);
+    this.scheduleUpdate()
+  },
+  update: function(dt){
+    Game.frameCount++
+    Game.snail.traversePath();
   }
 })
 
@@ -199,7 +203,6 @@ cc.game.onStart = function(){
 
 window.onload = function(){
     cc.game.run("gameCanvas");
-    console.log(cc)
 };
 
 // Maze Parsing \\
@@ -230,18 +233,16 @@ function parseMaze(textData){
 function setWalls(tileData, layer){
   var size = cc.director.getWinSize();
 
-  Game.tileSize = size.width/tileData.cols;
-
-  var scale = Game.tileSize/ 16
   for(var tile of tileData.tiles){
-    var wall = new cc.Sprite(Game.res.wall_png);
+    var wall = new cc.Sprite(Game.res.shrubwall_png);
     wall.attr({
-      x: Game.tileSize*tile.col,
-      y: size.height - Game.tileSize*tile.row,
+      x: TILE_SIZE*tile.col,
+      y: size.height - TILE_SIZE*tile.row,
       anchorX: 0,
       anchorY: 1,
-      scale: scale,
+      scale: 1,
     });
+
     // console.log(wall.x)
     layer.addChild(wall);
   }
@@ -249,6 +250,6 @@ function setWalls(tileData, layer){
 
 function findGridLocation(col, row){
   var size = cc.director.getWinSize();
-  var tileSize = size.width/GRID_SIZE;
-  return({x: col*tileSize, y:size.height-row*tileSize})
+  // var tileSize = size.width/GRID_SIZE;
+  return({x: col*TILE_SIZE, y:size.height-row*TILE_SIZE})
 }
