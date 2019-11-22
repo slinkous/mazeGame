@@ -53,6 +53,5 @@ class Maze {
     var x = col*TILE_SIZE;
     var y = (this.rows - row)*TILE_SIZE
     return({x:x, y:y})
-    console.log(this.rows, row)
   }
 }
