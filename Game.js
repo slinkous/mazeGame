@@ -17,7 +17,8 @@ Game.res = {
   snail_png: "snail2.png",
   wall_png: "wall.png",
   shrubwall_png: "shrubwall.png",
-  maze_txt: "maze.txt"
+  maze_txt: "maze.txt",
+  snailsplash_png: "snailsplash.png"
 };
 
 Game.g_resources = [];
