@@ -8,7 +8,7 @@ class Maze {
   parseMaze(textData){
     var mazeArr = textData.split("\n")
     mazeArr = mazeArr.filter((l) => {return l.length > 0 && l.search(/\S/) != -1})
-    var colCount = ((mazeArr[0].length+1)*2)/3 -1
+    var colCount = Math.ceil((mazeArr[0].length+1)*2/3) -1
     var rowCount = mazeArr.length
     var col;
     var tiles =[];

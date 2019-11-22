@@ -146,7 +146,10 @@ window.onload = function(){
 
   };
   cc.game.run("gameCanvas");
-  fetch('assets/mazes/maze2.txt')
+  var rand = Math.ceil(Math.random()*4)
+  var url = 'assets/mazes/maze' + rand +'.txt'
+  console.log(url)
+  fetch(url)
   .then(response => response.text())
   .then((data) => {
     Game.maze = new Maze(data)
